@@ -1,0 +1,106 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model Store {
+  id        String    @id@default(uuid())
+  name      String 
+  userId    String
+  billBoards BillBoard[] @relation("StoreToBillboard")
+  genres Genre[] @relation("StoreToGenre")
+  products Product[] @relation("StoreToProduct")
+  orders Order[] @relation("StoreToOrder")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model BillBoard {
+  id String @id@default(uuid())
+  storeId String
+  store Store @relation("StoreToBillboard", fields: [storeId], references: [id])
+  productId String
+  product Product @relation("BillboardToProduct", fields: [productId], references: [id])
+  label String
+  description String
+  cover String
+  imageUrl String
+  color String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([storeId])
+  @@index([productId])
+  
+}
+
+model Genre {
+  id String @id@default(uuid())
+  storeId String
+  store Store @relation("StoreToGenre", fields: [storeId], references: [id])
+  product Product[] @relation("GenreToProduct")
+  name String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([storeId])
+}
+
+
+model Product {
+  id String @id @default(uuid())
+  storeId String
+  store Store @relation("StoreToProduct", fields: [storeId], references: [id])
+  genreId String
+  genre Genre @relation("GenreToProduct", fields: [genreId], references: [id])
+  album String
+  artist String
+  description String
+  price Decimal
+  imageUrl String
+  orderItems OrderItem[]
+  isFeatured Boolean @default(false)
+  isArchived Boolean @default(false)
+  isSpotify Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+
+  billboards BillBoard[] @relation("BillboardToProduct")
+
+  @@index([storeId])
+  @@index([genreId])
+}
+
+model Order {
+  id String @id @default(uuid())
+  storeId String
+  store Store @relation("StoreToOrder", fields: [storeId], references: [id])
+  orderItems OrderItem[]
+  isPaid Boolean @default(false)
+  phone String @default("")
+  address String @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([storeId])
+}
+
+model OrderItem {
+ id String @id @default(uuid())
+ orderId String
+ order Order @relation(fields: [orderId], references: [id])
+ productId String
+ product Product @relation(fields: [productId], references: [id])
+
+ @@index([orderId])
+ @@index([productId])
+}
